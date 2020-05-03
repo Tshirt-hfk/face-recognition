@@ -13,7 +13,7 @@ def copyfile(srcfile, dstfile):
 def splitDataset(datasetDirs, trainDir, testDir, k):
     train = []
     test = []
-    label = 1
+    label = 0
     for datasetDir in datasetDirs:
         if not os.path.isdir(trainDir):
             os.mkdir(trainDir)
@@ -36,4 +36,4 @@ def splitDataset(datasetDirs, trainDir, testDir, k):
 
 if __name__ == "__main__":
     splitDataset(["./data/faces94", "./data/faces95", "./data/faces96", "./data/grimace"],
-                 "./data/train", "./data/test", 2)
+                 "./data/train", "./data/test", 5)

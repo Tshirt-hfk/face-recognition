@@ -8,9 +8,9 @@ from model import FaceRecognition
 from dataset import get_dataset
 
 parser = argparse.ArgumentParser(description='pytorch SRCNN')
-parser.add_argument('--batch_size', type=int, default=50, help='training batch size')
+parser.add_argument('--batch_size', type=int, default=60, help='training batch size')
 parser.add_argument('--num_epochs', type=int, default=1000, help='number of training epochs')
-parser.add_argument('--lr', type=float, default=1e-3, help='learning rate')
+parser.add_argument('--lr', type=float, default=1e-4, help='learning rate')
 parser.add_argument('--cuda', type=bool, default=True, help='use cuda?')
 parser.add_argument('--resume', type=str, default='', help='path to network checkpoint')
 parser.add_argument('--start_epoch', type=int, default=0, help='restart epoch number for training')
@@ -101,54 +101,55 @@ def save_checkpoint(network, epoch):
     print("Checkpoint saved to {}".format(param_path))
 
 
-# 构建网络
-print('==> building network...')
-network = FaceRecognition(label_num=394)
+if __name__ == "__main__":
+    # 构建网络
+    print('==> building network...')
+    network = FaceRecognition(label_num=394)
 
-# loss函数
-loss_func = torch.nn.CrossEntropyLoss()
+    # loss函数
+    loss_func = torch.nn.CrossEntropyLoss()
 
-# 设置GPU
-if opt.cuda and not torch.cuda.is_available():  # 检查是否有GPU
-    raise Exception('No GPU found, please run without --cuda')
-print("==> Setting GPU")
-if opt.cuda:
-    print('cuda_mode:', opt.cuda)
-    network = network.cuda()
-    loss_func = loss_func.cuda()
+    # 设置GPU
+    if opt.cuda and not torch.cuda.is_available():  # 检查是否有GPU
+        raise Exception('No GPU found, please run without --cuda')
+    print("==> Setting GPU")
+    if opt.cuda:
+        print('cuda_mode:', opt.cuda)
+        network = network.cuda()
+        loss_func = loss_func.cuda()
 
-# 设置优化器函数
-print("==> Setting Optimizer")
-optimizer = torch.optim.Adam(network.parameters(), lr=opt.lr)
+    # 设置优化器函数
+    print("==> Setting Optimizer")
+    optimizer = torch.optim.Adam(network.parameters(), lr=opt.lr)
 
-# 判断网络是否已经训练过或者已经训练完成
-if opt.pretrained:  # 训练完成,进行测试
-    # 加载测试数据进行测试
-    print('==> loading test data...')
-    test_dataset = get_dataset(opt.test_dir)
-    test_dataloader = Data.DataLoader(dataset=test_dataset, batch_size=opt.batch_size, shuffle=True,
-                                      num_workers=opt.threads)
-    if os.path.isfile(opt.pretrained):
-        print('==> loading model {}'.format(opt.pretrained))
-        weights = torch.load(opt.pretrained)
-        network.load_state_dict(weights['model'].state_dict())
-        # 进行测试
-        test(test_dataloader, network)
-    else:
-        print('==> no network model found at {}'.format(opt.pretrained))
-else:  # 未训练完成，需要进行训练
-    # 加载训练数据
-    print('==> loading training data...')
-    train_dataset = get_dataset(opt.train_dir)
-    test_dataset = get_dataset(opt.test_dir)
-    train_dataloader = Data.DataLoader(dataset=train_dataset, batch_size=opt.batch_size, shuffle=True,
-                                       num_workers=opt.threads)
-    test_dataloader = Data.DataLoader(dataset=test_dataset, batch_size=opt.batch_size, shuffle=False,
-                                       num_workers=opt.threads)
-    if opt.resume:  # 部分训练，需要重新开始训练
-        checkpoint = torch.load(opt.resume)
-        opt.start_epoch = checkpoint['epoch'] + 1
-        print('==> start training at epoch {}'.format(opt.start_epoch))
-        network.load_state_dict(checkpoint['model'].state_dict())
-        print("==> resume Training...")
-    train(train_dataloader, test_dataloader, network, optimizer, loss_func)
+    # 判断网络是否已经训练过或者已经训练完成
+    if opt.pretrained:  # 训练完成,进行测试
+        # 加载测试数据进行测试
+        print('==> loading test data...')
+        test_dataset = get_dataset(opt.test_dir)
+        test_dataloader = Data.DataLoader(dataset=test_dataset, batch_size=opt.batch_size, shuffle=True,
+                                          num_workers=opt.threads)
+        if os.path.isfile(opt.pretrained):
+            print('==> loading model {}'.format(opt.pretrained))
+            weights = torch.load(opt.pretrained)
+            network.load_state_dict(weights['model'].state_dict())
+            # 进行测试
+            test(test_dataloader, network)
+        else:
+            print('==> no network model found at {}'.format(opt.pretrained))
+    else:  # 未训练完成，需要进行训练
+        # 加载训练数据
+        print('==> loading training data...')
+        train_dataset = get_dataset(opt.train_dir)
+        test_dataset = get_dataset(opt.test_dir)
+        train_dataloader = Data.DataLoader(dataset=train_dataset, batch_size=opt.batch_size, shuffle=True,
+                                           num_workers=opt.threads)
+        test_dataloader = Data.DataLoader(dataset=test_dataset, batch_size=opt.batch_size, shuffle=False,
+                                          num_workers=opt.threads)
+        if opt.resume:  # 部分训练，需要重新开始训练
+            checkpoint = torch.load(opt.resume)
+            opt.start_epoch = checkpoint['epoch'] + 1
+            print('==> start training at epoch {}'.format(opt.start_epoch))
+            network.load_state_dict(checkpoint['model'].state_dict())
+            print("==> resume Training...")
+        train(train_dataloader, test_dataloader, network, optimizer, loss_func)

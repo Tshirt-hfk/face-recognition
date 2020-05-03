@@ -26,7 +26,7 @@ class DatasetFromFolder(data.Dataset):
         inputs = load_img(self.image_filenames[index])
         labels = self.labels[index]
         images = self.transform(inputs)
-        labels = labels - 1
+        labels = labels
         return images, labels
 
     def __len__(self):
