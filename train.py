@@ -4,11 +4,8 @@ import torch.utils.data as Data
 from torch.autograd import Variable
 import os
 import numpy as np
-import random
 from model import FaceRecognition
 from dataset import get_dataset
-from vis_tools import Visualizer
-import torch.nn.functional as F
 
 parser = argparse.ArgumentParser(description='pytorch SRCNN')
 parser.add_argument('--batch_size', type=int, default=50, help='training batch size')

@@ -4,7 +4,6 @@ from PIL import Image
 import torch.utils.data as data
 from torchvision import transforms
 from torchvision.transforms import Compose, ToTensor
-import torch
 
 
 def is_image_file(filename):
