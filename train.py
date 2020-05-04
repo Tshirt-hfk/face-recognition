@@ -7,21 +7,18 @@ import numpy as np
 from model import FaceRecognition
 from dataset import get_dataset
 
-parser = argparse.ArgumentParser(description='pytorch SRCNN')
-parser.add_argument('--batch_size', type=int, default=60, help='training batch size')
-parser.add_argument('--num_epochs', type=int, default=1000, help='number of training epochs')
+parser = argparse.ArgumentParser(description='face recognition')
+parser.add_argument('--batch_size', type=int, default=80, help='training batch size')
+parser.add_argument('--num_epochs', type=int, default=20, help='number of training epochs')
 parser.add_argument('--lr', type=float, default=1e-4, help='learning rate')
 parser.add_argument('--cuda', type=bool, default=True, help='use cuda?')
 parser.add_argument('--resume', type=str, default='', help='path to network checkpoint')
 parser.add_argument('--start_epoch', type=int, default=0, help='restart epoch number for training')
 parser.add_argument('--threads', type=int, default=0, help='number of threads')
-parser.add_argument('--momentum', type=float, default=0.9, help='momentum')
 parser.add_argument('--pretrained', type=str, default='', help='path to network parameters')
 parser.add_argument('--num_channels', type=int, default=3)
 parser.add_argument('--train_dir', type=str, default='./data/train', help='LR image path to training data directory')
 parser.add_argument('--test_dir', type=str, default='./data/test', help='image path to testing data directory')
-parser.add_argument('--train_interval', type=int, default=50, help='interval for training to save image')
-parser.add_argument('--test_interval', type=int, default=10, help='interval for testing to save image')
 opt = parser.parse_args()
 
 
@@ -37,13 +34,15 @@ def train(train_dataloader, test_dataloader, network, optimizer, loss_func):
 # 测试
 def test(test_dataloader, network):
     print('==> Testing...')
-    test_process(test_dataloader, network)
+    acc = test_process(test_dataloader, network)
+    with open("acc.txt", "a+", encoding="UTF-8") as f:
+        f.write("acc: {:.10f}\n".format(acc))
 
 
 # 每个epoch的训练程序
 def train_process(dataloader, network, optimizer, loss_func, epoch=1, epochs=1):
+    network.train()
     for iteration, (inputs, labels) in enumerate(dataloader):
-        network.train()
         inputs = Variable(inputs)  # 输入数据
         labels = Variable(labels)  # label
         if opt.cuda:
@@ -61,8 +60,8 @@ def train_process(dataloader, network, optimizer, loss_func, epoch=1, epochs=1):
 
 # 测试程序
 def test_process(test_dataloader, network):
-    train_correct = 0
     network.eval()
+    train_correct = 0
     for idx, (inputs, labels) in enumerate(test_dataloader):
         inputs = Variable(inputs)
         labels = Variable(labels)
@@ -72,6 +71,7 @@ def test_process(test_dataloader, network):
         preds = network(inputs)
         train_correct += calcu_acc(preds, labels)
     print(train_correct / len(test_dataloader))
+    return train_correct / len(test_dataloader)
 
 
 def calcu_acc(preds, labels):
